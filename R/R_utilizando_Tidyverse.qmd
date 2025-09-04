@@ -1,0 +1,195 @@
+---
+title: "Análise de Dados de Vendas"
+author: "Márcia Gabrielle"
+format: html
+editor: visual
+---
+
+# 01-Iniciando o projeto
+
+## Instalando a biblioteca do Tidyverse:
+
+```{r}
+install.packages("tidyverse")
+```
+
+## Carregando os pacotes do Tidyverse:
+
+```{r}
+library(tidyverse)
+```
+
+## Importando o arquivo de pedidos:
+
+```{r}
+pedidos <- read_csv("Pedidos_Hermex_Log.csv", show_col_types = FALSE)
+```
+
+```{r}
+head(pedidos)
+```
+
+## Selecionando as colunas de PedidoID e Status:
+
+```{r}
+pedidos %>%
+  select(PedidoID, Status)
+```
+
+### Selecionando colunas que começam com o termo "Data":
+
+```{r}
+pedidos %>%
+  select(starts_with("Data"))
+```
+
+## Filtrando pedidos no intervalo do dia 01/07 até 01/08:
+
+```{r}
+pedidos %>%
+  filter(DataPedido >= as.Date("2024-07-01") & DataPedido <= as.Date("2024-08-01"))
+```
+
+## Filtrando os pedidos no intervalo do dia 01/07 até 01/08 que estão pendentes ou em trânsito:
+
+```{r}
+pedidos %>%
+  filter(DataPedido >= as.Date("2024-07-01") & DataPedido <= as.Date("2024-08-01"), Status == "Em trânsito" | Status == "Pendente")
+```
+
+# 02 - Criando metricas
+
+Desafio: adicionar uma nova coluna no dataframe pedidos , acoluna de beneficios e modificar uma informação na coluna TransportadorID
+
+## Criando uma nova coluna de beneficios
+
+```{r}
+pedidos %>% 
+  mutate(Beneficios = ifelse(ValorTotal >= 2000, 'Liberado', 'Não liberado'))
+```
+
+## Modificando dados na coluna TransportadoraID
+
+```{r}
+pedidos %>%
+  mutate(TransportadorID = ifelse(is.na(TransportadorID), 'Particular', TransportadorID))
+```
+
+### Calculando o tempo de entrega de cada pedido
+
+```{r}
+pedidos %>%
+  mutate(DataPedido =  as.Date(DataPedido),
+         DataEntrega = as.Date(DataEntrega),
+         TempoEntrega = as.numeric(difftime(DataEntrega, DataPedido, units = 'days')))
+```
+
+### Calculando a media do tempo de entrega
+
+```{r}
+pedidos %>%
+  mutate(DataPedido =  as.Date(DataPedido),
+         DataEntrega = as.Date(DataEntrega),
+         TempoEntrega = as.numeric(difftime(DataEntrega, DataPedido, units = 'days'))
+         )%>%
+  summarise(MediaTempoEntrega = mean(TempoEntrega, na.rm = TRUE))
+```
+
+### Agrupando os pedidos por região
+
+```{r}
+percentual_pedidos_regiao <- pedidos %>%
+  group_by(Regiao)%>%
+  summarise(QuantidadePedidos = n())%>%
+  mutate(Percentual = (QuantidadePedidos / sum(QuantidadePedidos)) * 100)
+
+percentual_pedidos_regiao
+```
+
+# 03-Tratando os dados
+
+### **Alterando do formato largo para o formato longo**
+
+```{r}
+pedidos <- pedidos%>%
+  pivot_longer(cols = c(DataPedido, DataEntrega),
+               names_to = 'TipoData', values_to = 'Data')
+pedidos
+```
+
+### Separando dados
+
+```{r}
+pedidos <- pedidos %>%
+  separate(Data, into = c('Data', 'Horario'), sep = ' ')
+pedidos
+```
+
+### Trabalhando com strings
+
+```{r}
+pedidos <- pedidos %>%
+  mutate(Cep = str_extract(EnderecoPedido, '\\d{5}-\\d{3}'))
+pedidos
+```
+
+# 04-Visualizando os daados
+
+### Alterando os tipos de dados
+
+```{r}
+str(pedidos)
+```
+
+```{r}
+pedidos$Data <- ymd(pedidos$Data)
+```
+
+```{r}
+str(pedidos)
+```
+
+### Grafico de percentual por região
+
+```{r}
+grafico <- ggplot(percentual_pedidos_regiao, aes(x = Regiao, y = Percentual, fill = Regiao)) + 
+  geom_bar(stat = "identity") + 
+  labs(
+    title = "Porcentagem de Pedidos por Região",
+    x = "Região",
+    y = "Percentual (%)"
+  ) + 
+  theme_minimal()
+```
+
+```{r}
+print(grafico)
+```
+
+### Agrupando o valor total por mês
+
+```{r}
+pedidos_agrupados <- pedidos %>% 
+  mutate(MesAno = floor_date(Data, "month")) %>% 
+  group_by(MesAno) %>% 
+  summarise(ValorTotalMensal = sum(ValorTotal, na.rm = TRUE))
+head(pedidos_agrupados)
+```
+
+```{r}
+grafico <- ggplot(pedidos_agrupados, aes(x = MesAno, y = ValorTotalMensal)) + 
+  geom_line(color = 'blue') + 
+  labs(title = "Valor Total dos Pedidos ao Longo do Tempo", x = "Data do Pedido", y = "Valor Total") + 
+  theme_minimal()
+
+print(grafico)
+```
+
+# 05-Finalizando o projeto
+
+### Salvando os dados atualizados
+
+```{r}
+
+write_csv(pedidos, 'Pedidos_Hermex_Log_atualizado.csv')
+```
