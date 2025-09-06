@@ -1,6 +1,6 @@
 ---
 title: "R: Aplicando Data Visualization com ggplot2"
-author: "Afonso Augusto Rios"
+author: 
 format: html
 editor: visual
 ---
