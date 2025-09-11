@@ -1,0 +1,11 @@
+Data,ID_Produto,Nome_Produto,Quantidade_Vendida,Estoque_Disponível,Categoria
+2023-01-01,1001,Camisa Social Azul,5,50,Camisas
+2023-01-01,1002,Calça Jeans,8,30,Calças
+2023-01-02,1003,Jaqueta de Couro,2,20,Jaquetas
+2023-01-03,1004,Camisa Social Branca,3,45,Camisas
+2023-01-03,1005,Saia Longa,4,25,Saias
+2023-01-04,1006,Blusa de Algodão,7,60,Blusas
+2023-01-05,1007,Calça de Moletom,10,40,Calças
+2023-01-06,1008,Vestido Floral,6,35,Vestidos
+2023-01-07,1009,Terno Completo,1,15,Ternos
+2023-01-08,1010,Camiseta Básica,15,100,Camisetas
